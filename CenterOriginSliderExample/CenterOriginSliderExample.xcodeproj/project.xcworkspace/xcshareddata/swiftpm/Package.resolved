@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "centeroriginslider",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/thompson-dean/CenterOriginSlider",
+      "state" : {
+        "branch" : "main",
+        "revision" : "2948acf9fd20031c2a063e2688b2ce514fddc7ed"
+      }
+    }
+  ],
+  "version" : 2
+}

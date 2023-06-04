@@ -11,6 +11,7 @@
 		2A2B1A882A2C8BF900970D94 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2B1A872A2C8BF900970D94 /* ContentView.swift */; };
 		2A2B1A8A2A2C8BFB00970D94 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2A2B1A892A2C8BFB00970D94 /* Assets.xcassets */; };
 		2A2B1A8D2A2C8BFB00970D94 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2A2B1A8C2A2C8BFB00970D94 /* Preview Assets.xcassets */; };
+		2A2B1A952A2C8EE400970D94 /* CenterOriginSlider in Frameworks */ = {isa = PBXBuildFile; productRef = 2A2B1A942A2C8EE400970D94 /* CenterOriginSlider */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2A2B1A952A2C8EE400970D94 /* CenterOriginSlider in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -83,6 +85,9 @@
 			dependencies = (
 			);
 			name = CenterOriginSliderExample;
+			packageProductDependencies = (
+				2A2B1A942A2C8EE400970D94 /* CenterOriginSlider */,
+			);
 			productName = CenterOriginSliderExample;
 			productReference = 2A2B1A822A2C8BF900970D94 /* CenterOriginSliderExample.app */;
 			productType = "com.apple.product-type.application";
@@ -111,6 +116,9 @@
 				Base,
 			);
 			mainGroup = 2A2B1A792A2C8BF900970D94;
+			packageReferences = (
+				2A2B1A932A2C8EE400970D94 /* XCRemoteSwiftPackageReference "CenterOriginSlider" */,
+			);
 			productRefGroup = 2A2B1A832A2C8BF900970D94 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -339,6 +347,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2A2B1A932A2C8EE400970D94 /* XCRemoteSwiftPackageReference "CenterOriginSlider" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/thompson-dean/CenterOriginSlider";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2A2B1A942A2C8EE400970D94 /* CenterOriginSlider */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2A2B1A932A2C8EE400970D94 /* XCRemoteSwiftPackageReference "CenterOriginSlider" */;
+			productName = CenterOriginSlider;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 2A2B1A7A2A2C8BF900970D94 /* Project object */;
 }
