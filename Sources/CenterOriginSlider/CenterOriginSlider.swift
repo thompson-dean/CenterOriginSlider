@@ -105,9 +105,7 @@ public struct CenterOriginSlider: View {
                     offset.width = limitedWidth
 
                     let sliderProgress = (limitedWidth + sliderWidth / 2 - thumbSize / 2) / (sliderWidth - thumbSize)
-                    print("DEBUG: SLIDER RPOGRESS \(sliderProgress)")
                     let rawValue = minValue + Float(sliderProgress) * valueRange
-                    print("DEBUG: RawValue \(rawValue)")
                     
                     if let unwrappedIncrement = increment {
                         sliderValue = round(rawValue / unwrappedIncrement) * unwrappedIncrement
