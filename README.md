@@ -14,7 +14,7 @@ This package provides a variety of customization options such as thumb size, col
 
 ## Requirements
 
-- iOS 13.0+
+- iOS 14.0+
 - mac OS 11.0+
 
 ## Installation
