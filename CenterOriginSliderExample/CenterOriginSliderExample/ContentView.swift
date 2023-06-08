@@ -34,6 +34,7 @@ struct ContentView: View {
                     trackingBarColor: .blue,
                     trackingBarHeight: 6,
                     shadow: 2,
+                    shadowColor: .clear,
                     backgroundColor: .clear
                 )
                         

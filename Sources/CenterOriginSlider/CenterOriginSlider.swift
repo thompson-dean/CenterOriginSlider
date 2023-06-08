@@ -61,7 +61,10 @@ public struct CenterOriginSlider: View {
     public let trackingBarHeight: CGFloat
 
     /// The shadow radius of the slider's thumb.
-    public let shadow: Int
+    public let shadow: CGFloat
+    
+    /// The shadow radius' color.
+    public let shadowColor: Color
     
     /// The background color of the whole View.
     public let backgroundColor: Color
@@ -81,7 +84,8 @@ public struct CenterOriginSlider: View {
         guideBarHeight: CGFloat = 4,
         trackingBarColor: Color = .white,
         trackingBarHeight: CGFloat = 4,
-        shadow: Int = 0,
+        shadow: CGFloat = 0,
+        shadowColor: Color = .clear,
         backgroundColor: Color = .clear
     ) {
         self.minValue = minValue
@@ -96,6 +100,7 @@ public struct CenterOriginSlider: View {
         self.trackingBarColor = trackingBarColor
         self.trackingBarHeight = trackingBarHeight
         self.shadow = shadow
+        self.shadowColor = shadowColor
         self.backgroundColor = backgroundColor
     }
     
@@ -147,6 +152,7 @@ public struct CenterOriginSlider: View {
                         .frame(width: thumbSize, height: thumbSize)
                         .foregroundColor(thumbColor)
                         .offset(offset)
+                        .shadow(color: shadowColor, radius: shadow)
                         .gesture(dragGesture)
                         .onChange(of: sliderValue) { value in
                             let sliderProgress = (value - minValue) / valueRange
