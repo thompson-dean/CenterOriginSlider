@@ -48,7 +48,7 @@ struct ContentView: View {
     }
 }
 ```
-![Example 1](screenshots/screen01.png)
+![Example 1](screenshots/screen01.gif)
 In this example, the slider's value can vary from -100 to 100, starting from 0. The aims to look as native as possible when no customization is added.
 
 To further customize the slider, you can specify other properties as per your needs. For example:
@@ -57,8 +57,7 @@ To further customize the slider, you can specify other properties as per your ne
 CenterOriginSlider(
     minValue: -50,
     maxValue: 50,
-    increment: 10,
-    sliderValue: $sliderValue,
+    sliderValue: $value2,
     thumbSize: 24,
     thumbColor: .red,
     guideBarCornerRadius: 4,
@@ -67,10 +66,11 @@ CenterOriginSlider(
     trackingBarColor: .blue,
     trackingBarHeight: 6,
     shadow: 2,
+    shadowColor: .gray,
     backgroundColor: .clear
 )
 ```
-![Example 2](screenshots/screen02.png)
+![Example 2](screenshots/screen02.gif)
 ## Contribution
 Contributions to the CenterOriginSlider project are welcome! Feel free to open a new issue or send a pull request, if you happen to find a bug, or would liek to add any new features.
 
