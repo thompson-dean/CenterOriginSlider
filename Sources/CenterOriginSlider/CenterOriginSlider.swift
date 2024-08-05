@@ -26,7 +26,7 @@
 
 import SwiftUI
 
-struct CenterOriginSlider: View {
+public struct CenterOriginSlider: View {
     public enum Orientation {
         case horizontal, vertical
     }
@@ -117,7 +117,7 @@ struct CenterOriginSlider: View {
         self.shadowColor = shadowColor
     }
 
-    var body: some View {
+    public var body: some View {
         GeometryReader { proxy in
             ZStack {
                 guideBar
