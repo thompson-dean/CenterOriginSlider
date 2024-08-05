@@ -20,24 +20,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-/// `CenterOriginSlider` is a custom SwiftUI view that represents a slider. The slider's thumb can be moved horizontally
+/// `CenterOriginSlider` is a custom SwiftUI view that represents a slider. The slider's thumb can be moved horizontally or vertically
 /// to select a value within a range. The slider's appearance and behavior can be customized with several options.
 ///
+
 import SwiftUI
 
 public struct CenterOriginSlider: View {
+    public enum Orientation {
+        case horizontal, vertical
+    }
 
-    /// The minimum value the slider can take.
-    public let minValue: Float
+    public enum Increment {
+        case none
+        case fixed(CGFloat)
+    }
 
-    /// The maximum value the slider can take.
-    public let maxValue: Float
-
-    /// The increment by which the value should change. If this is nil, the value changes continuously.
-    public let increment: Float?
+    /// The orientation of the slider.
+    public let orientation: Orientation
 
     /// A binding to a variable that holds the current slider value.
-    @Binding public var sliderValue: Float
+    @Binding public var value: CGFloat
+
+    /// The lower and upper bounds of the slider
+    public let range: ClosedRange<CGFloat>
+
+    /// The increment by which the value should change. If this is none, the value changes continuously.
+    public let increment: Increment
 
     /// The size of the slider's thumb.
     public let thumbSize: CGFloat
@@ -62,36 +71,40 @@ public struct CenterOriginSlider: View {
 
     /// The shadow radius of the slider's thumb.
     public let shadow: CGFloat
-    
+
     /// The shadow radius' color.
     public let shadowColor: Color
-    
+
     /// The background color of the whole View.
     public let backgroundColor: Color
-    
-    @State public var accumulatedWidth: CGFloat = 0
-    @State public var offset: CGSize = .zero
-    
+
+    private var center: CGFloat {
+        (range.upperBound + range.lowerBound) / 2
+    }
+    private var normalizedPosition: CGFloat {
+        (value - center) / (range.upperBound - center)
+    }
+
     public init(
-        minValue: Float,
-        maxValue: Float,
-        increment: Float? = nil,
-        sliderValue: Binding<Float>,
+        _ orientation: Orientation,
+        value: Binding<CGFloat>,
+        range: ClosedRange<CGFloat> = -100...100,
+        increment: Increment = .none,
         thumbSize: CGFloat = 16,
         thumbColor: Color = .white,
         guideBarCornerRadius: CGFloat = 2,
-        guideBarColor: Color = .white.opacity(0.15),
+        guideBarColor: Color = .gray,
         guideBarHeight: CGFloat = 4,
         trackingBarColor: Color = .white,
         trackingBarHeight: CGFloat = 4,
-        shadow: CGFloat = 0,
-        shadowColor: Color = .clear,
+        shadow: CGFloat = 2,
+        shadowColor: Color = .gray,
         backgroundColor: Color = .clear
     ) {
-        self.minValue = minValue
-        self.maxValue = maxValue
+        self.orientation = orientation
+        self._value = value
+        self.range = range
         self.increment = increment
-        self._sliderValue = sliderValue
         self.thumbSize = thumbSize
         self.thumbColor = thumbColor
         self.guideBarCornerRadius = guideBarCornerRadius
@@ -103,69 +116,54 @@ public struct CenterOriginSlider: View {
         self.shadowColor = shadowColor
         self.backgroundColor = backgroundColor
     }
-    
-    public var body: some View {
-        GeometryReader { geometry in
-            let sliderWidth = geometry.size.width - 32
-            let valueRange = maxValue - minValue
-            let dragGesture = DragGesture()
-                .onChanged({ value in
-                    let width = value.translation.width + accumulatedWidth
-                    let limitedWidth = max(min(width, sliderWidth / 2 - thumbSize / 2), -sliderWidth / 2 + thumbSize / 2)
-                    offset.width = limitedWidth
 
-                    let sliderProgress = (limitedWidth + sliderWidth / 2 - thumbSize / 2) / (sliderWidth - thumbSize)
-                    let rawValue = minValue + Float(sliderProgress) * valueRange
-                    
-                    if let unwrappedIncrement = increment {
-                        sliderValue = round(rawValue / unwrappedIncrement) * unwrappedIncrement
-                    } else {
-                        sliderValue = round(rawValue)
-                    }
-                })
-                .onEnded({ value in
-                    accumulatedWidth = offset.width
-                })
-            VStack(alignment: .center) {
-                ZStack(alignment: .center) {
-                    RoundedRectangle(cornerRadius: guideBarCornerRadius)
-                        .frame(width: sliderWidth, height: guideBarHeight)
-                        .foregroundColor(guideBarColor)
-                    HStack(spacing: 0) {
-                        HStack {
-                            Spacer()
-                            Rectangle()
-                                .frame(width: max(sliderValue < 0 ? CGFloat((-sliderValue / valueRange) * Float(sliderWidth - thumbSize)) : 0, 0), height: trackingBarHeight)
-                                .foregroundColor(trackingBarColor)
-                        }
-                        .frame(maxWidth: .infinity)
-                        HStack {
-                            Rectangle()
-                                .frame(width: max(sliderValue > 0 ? CGFloat((sliderValue / valueRange) * Float(sliderWidth - thumbSize)) : 0, 0), height: trackingBarHeight)
-                                .foregroundColor(trackingBarColor)
-                            Spacer()
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                    .frame(maxWidth: .infinity)
-                    Circle()
-                        .frame(width: thumbSize, height: thumbSize)
-                        .foregroundColor(thumbColor)
-                        .offset(offset)
-                        .shadow(color: shadowColor, radius: shadow)
-                        .gesture(dragGesture)
-                        .onChange(of: sliderValue) { value in
-                            let sliderProgress = (value - minValue) / valueRange
-                            let newWidth = CGFloat(sliderProgress) * (sliderWidth - thumbSize) - sliderWidth / 2 + thumbSize / 2
-                            offset.width = newWidth
-                        }
-                }
-                .padding(.horizontal, 16)
+    public var body: some View {
+        GeometryReader { proxy in
+            ZStack {
+                SliderTrack(orientation: orientation, height: guideBarHeight, color: guideBarColor, cornerRadius: guideBarCornerRadius)
+                SliderFill(orientation: orientation, height: trackingBarHeight, color: trackingBarColor, normalizedPosition: normalizedPosition)
+                SliderThumb(size: thumbSize, color: thumbColor)
+                    .shadow(color: shadowColor, radius: shadow)
+                    .offset(thumbOffset(in: proxy))
+                    .gesture(sliderDragGesture(in: proxy))
             }
-            .frame(maxHeight: .infinity)
-            .background(backgroundColor)
+        }
+        .background(backgroundColor)
+    }
+
+    private func thumbOffset(in proxy: GeometryProxy) -> CGSize {
+        switch orientation {
+        case .horizontal:
+            return CGSize(width: proxy.size.width / 2 * normalizedPosition, height: 0)
+        case .vertical:
+            return CGSize(width: 0, height: proxy.size.height / 2 * normalizedPosition)
+        }
+    }
+
+    private func sliderDragGesture(in proxy: GeometryProxy) -> some Gesture {
+        DragGesture()
+            .onChanged { gesture in
+            let normalizedLocation = normalizedLocation(for: gesture, in: proxy)
+            let updatedValue = normalizedLocation * (range.upperBound - center) + center
+            let clampedValue = max(min(updatedValue, range.upperBound), range.lowerBound)
+
+            withAnimation {
+                switch increment {
+                case .none:
+                    value = clampedValue
+                case .fixed(let incrementValue):
+                    value = (clampedValue / incrementValue).rounded() * incrementValue
+                }
+            }
+        }
+    }
+
+    private func normalizedLocation(for gesture: DragGesture.Value, in proxy: GeometryProxy) -> CGFloat {
+        switch orientation {
+        case .horizontal:
+            return (gesture.location.x - thumbSize / 2) / (proxy.size.width / 2)
+        case .vertical:
+            return (gesture.location.y - thumbSize / 2) / (proxy.size.height / 2)
         }
     }
 }
-
-
