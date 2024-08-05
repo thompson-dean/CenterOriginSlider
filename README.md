@@ -1,13 +1,16 @@
 # CenterOriginSlider 
 
-CenterOriginSlider is an open-source SwiftUI package that provides a customizable center origin slider for your iOS projects. This slider allows users to select values in a range, either negative or positive, from a center origin point.
+CenterOriginSlider is an open-source SwiftUI package that provides a customizable center origin slider for your iOS projects. 
+This slider allows users to select values in a range, either negative or positive, from a center origin point.
+CenterOriginSlider can be used vertically and horizontally.
 
 This package provides a variety of customization options such as thumb size, color, guide bar style, tracking bar color, and more, making it a flexible choice for your user interface needs.
 
 ## Features
 
-- Set the minimum and maximum values for your slider.
+- Set the upper and lower bounds of your slider.
 - Opt to increment values discretely or continuously.
+- Set the orientation to horizontal or vertical.
 - Customize the slider's thumb size, color, and shadow.
 - Style the guide bar with your choice of corner radius, color, and height.
 - Define the appearance of the tracking bar, including its color and height.
@@ -37,40 +40,56 @@ import CenterOriginSlider
 
 ```
 struct ContentView: View {
-    @State private var sliderValue: Float = 0.0
+    @State private var value: CGFloat = 0.0
 
     var body: some View {
         CenterOriginSlider(
-            minValue: -100,
-            maxValue: 100,
-            sliderValue: $sliderValue
+            .horizontal,
+            value: $value,
+            range: -100...100
         )
     }
 }
 ```
 ![Example 1](screenshots/screen01.gif)
-In this example, the slider's value can vary from -100 to 100, starting from 0. The aims to look as native as possible when no customization is added.
+
+CenterOriginSlider also takes whole number and decimal increments.
+
+```
+CenterOriginSlider(
+    .horizontal,
+    value: $value,
+    range: -100...100,
+    increment: .fixed(5)
+)
+```
+![Example 2](screenshots/screen02.gif)
+
 
 To further customize the slider, you can specify other properties as per your needs. For example:
 
 ```
 CenterOriginSlider(
-    minValue: -50,
-    maxValue: 50,
-    sliderValue: $value2,
-    thumbSize: 24,
-    thumbColor: .red,
-    guideBarCornerRadius: 4,
-    guideBarColor: .blue.opacity(0.2),
-    guideBarHeight: 6,
-    trackingBarColor: .blue,
-    trackingBarHeight: 6,
-    shadow: 2,
-    shadowColor: .gray,
-    backgroundColor: .clear
+.horizontal,
+value: $value,
+range: -25...25,
+increment: .none,
+thumbSize: 32,
+thumbColor: .white,
+centerPointSize: 18,
+guideBarCornerRadius: 16,
+guideBarColor: .purple,
+guideBarHeight: 32,
+trackingBarColor: .yellow,
+trackingBarHeight: 16,
+shadow: 1,
+shadowColor: .black
 )
 ```
-![Example 2](screenshots/screen02.gif)
+![Example 3](screenshots/screen03.gif)
+
+**Warning:** Make sure to set the range with an upper and lower bound are symmetrical. i.e. -100...100.
+
 ## Contribution
 Contributions to the CenterOriginSlider project are welcome! Feel free to open a new issue or send a pull request, if you happen to find a bug, or would liek to add any new features.
 

@@ -26,7 +26,7 @@
 
 import SwiftUI
 
-public struct CenterOriginSlider: View {
+struct CenterOriginSlider: View {
     public enum Orientation {
         case horizontal, vertical
     }
@@ -43,7 +43,7 @@ public struct CenterOriginSlider: View {
     @Binding public var value: CGFloat
 
     /// The lower and upper bounds of the slider
-    public let range: ClosedRange<CGFloat>
+    public var range: ClosedRange<CGFloat>
 
     /// The increment by which the value should change. If this is none, the value changes continuously.
     public let increment: Increment
@@ -53,6 +53,9 @@ public struct CenterOriginSlider: View {
 
     /// The color of the slider's thumb.
     public let thumbColor: Color
+
+    /// The size of the center most point of the slider,
+    public let centerPointSize: CGFloat
 
     /// The corner radius of the slider's guide bar.
     public let guideBarCornerRadius: CGFloat
@@ -75,9 +78,6 @@ public struct CenterOriginSlider: View {
     /// The shadow radius' color.
     public let shadowColor: Color
 
-    /// The background color of the whole View.
-    public let backgroundColor: Color
-
     private var center: CGFloat {
         (range.upperBound + range.lowerBound) / 2
     }
@@ -88,18 +88,18 @@ public struct CenterOriginSlider: View {
     public init(
         _ orientation: Orientation,
         value: Binding<CGFloat>,
-        range: ClosedRange<CGFloat> = -100...100,
+        range: ClosedRange<CGFloat>,
         increment: Increment = .none,
         thumbSize: CGFloat = 16,
         thumbColor: Color = .white,
+        centerPointSize: CGFloat = 0,
         guideBarCornerRadius: CGFloat = 2,
         guideBarColor: Color = .gray,
         guideBarHeight: CGFloat = 4,
         trackingBarColor: Color = .white,
         trackingBarHeight: CGFloat = 4,
         shadow: CGFloat = 2,
-        shadowColor: Color = .gray,
-        backgroundColor: Color = .clear
+        shadowColor: Color = .gray
     ) {
         self.orientation = orientation
         self._value = value
@@ -107,6 +107,7 @@ public struct CenterOriginSlider: View {
         self.increment = increment
         self.thumbSize = thumbSize
         self.thumbColor = thumbColor
+        self.centerPointSize = centerPointSize
         self.guideBarCornerRadius = guideBarCornerRadius
         self.guideBarColor = guideBarColor
         self.guideBarHeight = guideBarHeight
@@ -114,56 +115,95 @@ public struct CenterOriginSlider: View {
         self.trackingBarHeight = trackingBarHeight
         self.shadow = shadow
         self.shadowColor = shadowColor
-        self.backgroundColor = backgroundColor
     }
 
-    public var body: some View {
+    var body: some View {
         GeometryReader { proxy in
             ZStack {
-                SliderTrack(orientation: orientation, height: guideBarHeight, color: guideBarColor, cornerRadius: guideBarCornerRadius)
-                SliderFill(orientation: orientation, height: trackingBarHeight, color: trackingBarColor, normalizedPosition: normalizedPosition)
-                SliderThumb(size: thumbSize, color: thumbColor)
-                    .shadow(color: shadowColor, radius: shadow)
-                    .offset(thumbOffset(in: proxy))
-                    .gesture(sliderDragGesture(in: proxy))
+                guideBar
+                centerPointCircle
+                trackingBar(in: proxy)
+                thumb(in: proxy)
+                    .gesture(DragGesture().onChanged { dragGesture(gesture: $0, proxy: proxy) })
             }
+            .rotationEffect(.degrees(orientation == .vertical ? 180 : 0))
         }
-        .background(backgroundColor)
     }
 
-    private func thumbOffset(in proxy: GeometryProxy) -> CGSize {
+    private func dragGesture(gesture: DragGesture.Value, proxy: GeometryProxy) {
+        let normalizedLocation: CGFloat
         switch orientation {
         case .horizontal:
-            return CGSize(width: proxy.size.width / 2 * normalizedPosition, height: 0)
+            normalizedLocation = (gesture.location.x - thumbSize / 2) / (proxy.size.width / 2)
         case .vertical:
-            return CGSize(width: 0, height: proxy.size.height / 2 * normalizedPosition)
+            normalizedLocation = (gesture.location.y - thumbSize / 2) / (proxy.size.height / 2)
+        }
+
+        let updatedValue = normalizedLocation * (range.upperBound - center)
+        let clampedValue = max(min(updatedValue, range.upperBound), range.lowerBound)
+        switch increment {
+        case .fixed(let increment):
+            value = (clampedValue / increment).rounded() * increment
+        case .none:
+            value = clampedValue
         }
     }
+}
 
-    private func sliderDragGesture(in proxy: GeometryProxy) -> some Gesture {
-        DragGesture()
-            .onChanged { gesture in
-            let normalizedLocation = normalizedLocation(for: gesture, in: proxy)
-            let updatedValue = normalizedLocation * (range.upperBound - center) + center
-            let clampedValue = max(min(updatedValue, range.upperBound), range.lowerBound)
+private extension CenterOriginSlider {
+    private func thumb(in proxy: GeometryProxy) -> some View {
+        Circle()
+            .fill(thumbColor)
+            .frame(width: thumbSize, height: thumbSize)
+            .shadow(color: shadowColor, radius: shadow)
+            .offset(
+                x: orientation == .horizontal ? proxy.size.width / 2 * normalizedPosition : 0,
+                y: orientation == .horizontal ? 0 : proxy.size.height / 2 * normalizedPosition
+            )
+    }
 
-            withAnimation {
-                switch increment {
-                case .none:
-                    value = clampedValue
-                case .fixed(let incrementValue):
-                    value = (clampedValue / incrementValue).rounded() * incrementValue
+    private func trackingBar(in proxy: GeometryProxy) -> some View {
+        Rectangle()
+            .fill(trackingBarColor)
+            .frame(size: getRectangleSize(proxy: proxy))
+            .alignmentGuide(HorizontalAlignment.center, computeValue: { d in
+                if case .horizontal = orientation {
+                    value > center ? d[.leading] : d[.trailing]
+                } else {
+                    d[HorizontalAlignment.center]
+                }
+            })
+            .alignmentGuide(VerticalAlignment.center) { d in
+                if case .vertical = orientation {
+                    value > center ? d[.top] : d[.bottom]
+                } else {
+                    d[VerticalAlignment.center]
                 }
             }
-        }
     }
 
-    private func normalizedLocation(for gesture: DragGesture.Value, in proxy: GeometryProxy) -> CGFloat {
+    private var guideBar: some View {
+        Rectangle()
+            .fill(guideBarColor)
+            .clipShape(RoundedRectangle(cornerRadius: guideBarCornerRadius))
+            .frame(
+                width: orientation == .horizontal ? nil : guideBarHeight,
+                height: orientation == .horizontal ? guideBarHeight : nil
+            )
+    }
+
+    private var centerPointCircle: some View {
+        Circle()
+            .fill(trackingBarColor)
+            .frame(width: centerPointSize, height: centerPointSize)
+    }
+
+    private func getRectangleSize(proxy: GeometryProxy) -> CGSize {
         switch orientation {
         case .horizontal:
-            return (gesture.location.x - thumbSize / 2) / (proxy.size.width / 2)
+            CGSize(width: abs(proxy.size.width / 2 * normalizedPosition), height: trackingBarHeight)
         case .vertical:
-            return (gesture.location.y - thumbSize / 2) / (proxy.size.height / 2)
+            CGSize(width: trackingBarHeight, height: abs(proxy.size.height / 2 * normalizedPosition))
         }
     }
 }
